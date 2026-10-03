@@ -17,6 +17,7 @@ import com.github.alexmodguy.alexscaves.client.render.item.ACItemRenderPropertie
 import com.github.alexmodguy.alexscaves.client.render.item.RaygunRenderHelper;
 import com.github.alexmodguy.alexscaves.client.render.item.tooltip.ClientSackOfSatingTooltip;
 import com.github.alexmodguy.alexscaves.client.sound.*;
+import com.github.alexmodguy.alexscaves.mixin.client.DeltaTrackerTimerAccessor;
 import com.github.alexmodguy.alexscaves.mixin.client.GameRendererAccessor;
 import com.github.alexmodguy.alexscaves.mixin.client.SoundEngineAccessor;
 import com.github.alexmodguy.alexscaves.mixin.client.SoundManagerAccessor;
@@ -65,6 +66,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -86,6 +88,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -260,6 +263,7 @@ public class ClientProxy extends CommonProxy {
 
     private static void onFabricClientTick(Minecraft minecraft) {
         Entity cameraEntity = minecraft.cameraEntity;
+        tickClientTickRate(minecraft);
         tickBubbledEffects();
         if (shaderLoadAttemptCooldown > 0) {
             shaderLoadAttemptCooldown--;
@@ -1622,7 +1626,40 @@ public class ClientProxy extends CommonProxy {
     }
 
     public boolean isTickRateModificationActive(Level level) {
-        return ClientTickRateTracker.getForClient(Minecraft.getInstance()).getClientTickRate() != 50;
+        return isClientSlowMotionAllowed() && ClientTickRateTracker.getForClient(Minecraft.getInstance()).getClientTickRate() != 50;
+    }
+
+    @Override
+    public void syncClientTickRate(CompoundTag tag) {
+        ClientTickRateTracker.getForClient(Minecraft.getInstance()).syncFromServer(tag);
+    }
+
+    /**
+     * Citadel slows the whole client down (Sugar Rush). Only safe in an unpublished singleplayer world: the integrated
+     * server skips movement checks for its owner, while a dedicated or LAN server would see a client ticking at a
+     * different rate than itself.
+     */
+    public static boolean isClientSlowMotionAllowed() {
+        Minecraft minecraft = Minecraft.getInstance();
+        return minecraft.hasSingleplayerServer() && minecraft.getSingleplayerServer() != null && !minecraft.getSingleplayerServer().isPublished();
+    }
+
+    private static void tickClientTickRate(Minecraft minecraft) {
+        ClientTickRateTracker tracker = ClientTickRateTracker.getForClient(minecraft);
+        float msPerTick = 50F;
+        if (minecraft.level == null || minecraft.player == null) {
+            tracker.tickRateModifierList.clear();
+        } else {
+            if (!minecraft.isPaused()) {
+                tracker.masterTick();
+            }
+            if (isClientSlowMotionAllowed()) {
+                msPerTick = tracker.getClientTickRate();
+            }
+        }
+        if (minecraft.getTimer() instanceof DeltaTracker.Timer timer) {
+            ((DeltaTrackerTimerAccessor) timer).ac_setMsPerTick(msPerTick);
+        }
     }
 
     @Override
