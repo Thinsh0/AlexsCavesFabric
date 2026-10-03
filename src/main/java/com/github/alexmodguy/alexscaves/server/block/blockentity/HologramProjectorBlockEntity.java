@@ -130,31 +130,9 @@ public class HologramProjectorBlockEntity extends BlockEntity {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
-    public void applyUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
-        if (tag.contains("EntityType")) {
-            String str = tag.getString("EntityType");
-            this.entityType = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(str));
-        }
-        this.entityTag = tag.getCompound("EntityTag");
-        this.rotation = tag.getFloat("Rotation");
-        if (tag.contains("LastPlayerUUID")) {
-            this.lastPlayerUUID = tag.getUUID("LastPlayerUUID");
-        }
-    }
-
-    public CompoundTag getUpdateTag() {
-        CompoundTag compoundtag = new CompoundTag();
-        if (this.entityType != null) {
-            compoundtag.putString("EntityType", BuiltInRegistries.ENTITY_TYPE.getKey(this.entityType).toString());
-        }
-        if (this.entityTag != null) {
-            compoundtag.put("EntityTag", this.entityTag);
-        }
-        compoundtag.putFloat("Rotation", this.rotation);
-        if (lastPlayerUUID != null) {
-            compoundtag.putUUID("LastPlayerUUID", lastPlayerUUID);
-        }
-        return compoundtag;
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return this.saveWithoutMetadata(registries);
     }
 
     public void setEntity(EntityType entityType, CompoundTag entityTag, float playerRot) {

@@ -5,6 +5,8 @@
   "target": "@env(DEFAULT)",
   "refmap": "alexscaves.refmap.json",
   "mixins": [
+    "MobCategoryInvoker",
+    "MobCategoryMixin",
     "ACForgeEventMixin",
     "AbstractArrowMixin",
     "AbstractMinecartMixin",

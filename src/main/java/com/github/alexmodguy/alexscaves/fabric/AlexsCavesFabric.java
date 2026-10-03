@@ -13,6 +13,8 @@ public class AlexsCavesFabric implements ModInitializer {
         ACNetworkingFabric.registerCommon();
         ACMultipartFabric.registerCommon();
         ACFabricEventBridge.registerCommon();
+        com.github.alexmodguy.alexscaves.server.misc.ACRuntimeData.init();
+        com.github.alexmodguy.alexscaves.server.misc.ACLootModifiers.register();
         FabricRegistryBootstrap.bootstrapCommon();
         AlexsCaves.setProxy(new com.github.alexmodguy.alexscaves.server.CommonProxy());
         AlexsCaves.init();

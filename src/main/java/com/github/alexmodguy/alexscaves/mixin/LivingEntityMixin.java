@@ -198,7 +198,7 @@ public abstract class LivingEntityMixin extends Entity implements HeadRotationEn
 
     @Unique
     private static boolean isPossessed(Entity e) {
-        return com.github.alexmodguy.alexscaves.server.misc.ACRuntimeData.getOrCreate(e).getBoolean("TotemPossessed");
+        return com.github.alexmodguy.alexscaves.server.misc.ACRuntimeData.read(e).getBoolean("TotemPossessed");
     }
 
     @Override
