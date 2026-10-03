@@ -91,7 +91,12 @@ public class HologramProjectorBlockEntity extends BlockEntity {
             this.entityType = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(str));
         }
         if (tag.contains("EntityTag")) {
-            this.entityTag = tag.getCompound("EntityTag");
+            CompoundTag newEntityTag = tag.getCompound("EntityTag");
+            if (!newEntityTag.equals(this.entityTag)) {
+                // a different entity was synced from the server, rebuild the displayed copy
+                this.displayEntity = null;
+            }
+            this.entityTag = newEntityTag;
         }
         this.rotation = tag.getFloat("Rotation");
         if (tag.contains("LastPlayerUUID")) {
@@ -158,6 +163,9 @@ public class HologramProjectorBlockEntity extends BlockEntity {
         this.rotation = playerRot;
         displayEntity = null;
         lastPlayerUUID = null;
+        if (level != null && !level.isClientSide) {
+            markUpdated();
+        }
     }
 
     public boolean isPlayerRender() {
