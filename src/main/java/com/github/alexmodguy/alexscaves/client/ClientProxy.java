@@ -70,8 +70,10 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.FallingBlockRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
@@ -277,6 +279,9 @@ public class ClientProxy extends CommonProxy {
         prevNukeFlashAmount = nukeFlashAmount;
         nukeFlashAmount = Mth.approach(nukeFlashAmount, renderNukeFlashFor > 0 ? 1.0F : 0.0F, renderNukeFlashFor > 0 ? 0.25F : 0.08F);
         masterVolumeNukeModifier = Mth.approach(masterVolumeNukeModifier, muteNonNukeSoundsFor > 0 ? 1.0F : 0.0F, 0.08F);
+        if (minecraft.level != null && !minecraft.isPaused()) {
+            ClientEvents.tickDarknessTrails(minecraft.level.entitiesForRendering());
+        }
         if (cameraEntity == null || minecraft.level == null) {
             acSkyOverrideAmount = 0.0F;
             acSkyOverrideColor = Vec3.ZERO;
@@ -327,10 +332,24 @@ public class ClientProxy extends CommonProxy {
         PoseStack poseStack = context.matrixStack();
         Camera camera = context.camera();
         float partialTick = context.tickCounter().getGameTimeDeltaPartialTick(false);
+        if (ClientEvents.shouldRenderLocalPlayerFromCamera()) {
+            // vanilla skips the local player whenever the camera is another entity, NeoForge did not
+            renderLocalPlayer(Minecraft.getInstance().player, camera, partialTick, poseStack);
+        }
         RenderSystem.runAsFancy(() -> HologramProjectorBlockRenderer.renderEntireBatch(context.worldRenderer(), poseStack, 0, camera, partialTick));
         RenderSystem.runAsFancy(() -> CorrodentRenderer.renderEntireBatch(context.worldRenderer(), poseStack, 0, camera, partialTick));
         RenderSystem.runAsFancy(() -> LicowitchRenderer.renderEntireBatch(context.worldRenderer(), poseStack, 0, camera, partialTick));
         Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
+    }
+
+    private static void renderLocalPlayer(LocalPlayer player, Camera camera, float partialTick, PoseStack poseStack) {
+        Vec3 cameraPos = camera.getPosition();
+        double x = Mth.lerp(partialTick, player.xOld, player.getX()) - cameraPos.x;
+        double y = Mth.lerp(partialTick, player.yOld, player.getY()) - cameraPos.y;
+        double z = Mth.lerp(partialTick, player.zOld, player.getZ()) - cameraPos.z;
+        float yaw = Mth.lerp(partialTick, player.yRotO, player.getYRot());
+        EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        dispatcher.render(player, x, y, z, yaw, partialTick, poseStack, Minecraft.getInstance().renderBuffers().bufferSource(), dispatcher.getPackedLightCoords(player, partialTick));
     }
 
     private static void onFabricAfterTranslucent(WorldRenderContext context) {
@@ -349,6 +368,9 @@ public class ClientProxy extends CommonProxy {
         Entity player = minecraft.getCameraEntity();
         if (player == null) {
             return;
+        }
+        if (player instanceof PossessesCamera && !minecraft.options.getCameraType().isFirstPerson()) {
+            minecraft.options.setCameraType(CameraType.FIRST_PERSON);
         }
         boolean firstPerson = minecraft.options.getCameraType().isFirstPerson();
         GameRenderer renderer = minecraft.gameRenderer;

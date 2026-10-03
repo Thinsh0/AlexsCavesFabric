@@ -548,6 +548,7 @@ public class SubterranodonEntity extends DinosaurEntity implements PackAnimal, F
         }
     }
 
+    @Override
     public boolean shouldRiderSit() {
         return false;
     }
