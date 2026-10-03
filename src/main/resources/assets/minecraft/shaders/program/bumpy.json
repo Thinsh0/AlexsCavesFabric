@@ -5,7 +5,7 @@
     "dstrgb": "zero"
   },
   "vertex": "sobel",
-  "fragment": "alexscaves:bumpy",
+  "fragment": "bumpy",
   "attributes": ["Position"],
   "samplers": [
     { "name": "DiffuseSampler" }
