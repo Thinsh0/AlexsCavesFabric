@@ -134,6 +134,8 @@ public class ClientProxy extends CommonProxy {
             "shaders/post/purple_witch.json");
     public static final ResourceLocation SUGAR_RUSH_SHADER = ResourceLocation.fromNamespaceAndPath(AlexsCaves.MODID,
             "shaders/post/sugar_rush.json");
+    public static final ResourceLocation RED_GHOST_SHADER = ResourceLocation.fromNamespaceAndPath(AlexsCaves.MODID,
+            "shaders/post/red_ghost.json");
     private static final ResourceLocation SUBMARINE_SHADER = ResourceLocation.fromNamespaceAndPath(AlexsCaves.MODID,
             "shaders/post/submarine_light.json");
     private static final ResourceLocation WATCHER_SHADER = ResourceLocation.fromNamespaceAndPath(AlexsCaves.MODID,
@@ -704,6 +706,7 @@ public class ClientProxy extends CommonProxy {
         PostEffectRegistry.registerEffect(HOLOGRAM_SHADER);
         PostEffectRegistry.registerEffect(PURPLE_WITCH_SHADER);
         PostEffectRegistry.registerEffect(SUGAR_RUSH_SHADER);
+        PostEffectRegistry.registerEffect(RED_GHOST_SHADER);
         ACBlockRenderLayerRegistry.register();
         // Menu screens are now registered via RegisterMenuScreensEvent in commonInit
         hasACSplashText = random.nextInt(300) == 0;
@@ -906,6 +909,12 @@ public class ClientProxy extends CommonProxy {
                 DefaultVertexFormat.NEW_ENTITY, ACInternalShaders::setRenderTypeFerrouslimeGelShader);
         registrar.register(ResourceLocation.fromNamespaceAndPath(AlexsCaves.MODID, "rendertype_hologram"),
                 DefaultVertexFormat.POSITION_COLOR, ACInternalShaders::setRenderTypeHologramShader);
+        // copies of rendertype_entity_translucent / rendertype_energy_swirl: Iris swaps the vanilla ones for
+        // shaderpack programs that draw into its own framebuffer, which would bypass the post-effect targets
+        registrar.register(ResourceLocation.fromNamespaceAndPath(AlexsCaves.MODID, "rendertype_hologram_entity"),
+                DefaultVertexFormat.NEW_ENTITY, ACInternalShaders::setRenderTypeHologramEntityShader);
+        registrar.register(ResourceLocation.fromNamespaceAndPath(AlexsCaves.MODID, "rendertype_irradiated_swirl"),
+                DefaultVertexFormat.NEW_ENTITY, ACInternalShaders::setRenderTypeIrradiatedSwirlShader);
         registrar.register(ResourceLocation.fromNamespaceAndPath(AlexsCaves.MODID, "rendertype_irradiated"),
                 DefaultVertexFormat.NEW_ENTITY, ACInternalShaders::setRenderTypeIrradiatedShader);
         registrar.register(ResourceLocation.fromNamespaceAndPath(AlexsCaves.MODID, "rendertype_blue_irradiated"),
