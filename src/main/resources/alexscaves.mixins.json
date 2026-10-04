@@ -8,6 +8,7 @@
     "MobCategoryInvoker",
     "MobCategoryMixin",
     "ACForgeEventMixin",
+    "LivingEntityIrradiationSyncMixin",
     "AbstractArrowMixin",
     "AbstractMinecartMixin",
     "AnvilMenuMixin",
